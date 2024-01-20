@@ -1,6 +1,4 @@
 import logging
-import threading
-import time
 
 import os
 from telegram import Update
@@ -11,6 +9,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
+from deep_translator import GoogleTranslator
 from dotenv import load_dotenv
 from transformers import pipeline
 from PIL import Image
@@ -32,6 +31,14 @@ TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
 assert TELEGRAM_API_TOKEN, "Expected TELEGRAM_API_TOKEN to be set"
 
 
+async def reply_text(update: Update, text: str):
+    await update.message.reply_text(
+        GoogleTranslator(
+            source="en", target=update.message.from_user.language_code
+        ).translate(text)
+    )
+
+
 def image_to_text(*args, **kwargs):
     return [{"generated_text": "dummy response"}]
 
@@ -40,9 +47,7 @@ image_to_text = pipeline("image-to-text", model="Salesforce/blip-image-captionin
 
 
 async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Send me a photo and I'll respond with a caption!"
-    )
+    await reply_text(update, "Send me a photo and I'll respond with a caption!")
 
 
 async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -51,7 +56,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     raw_image = Image.open(requests.get(photo.file_path, stream=True).raw)
 
     response_message = image_to_text(raw_image)[0]
-    await update.message.reply_text(response_message["generated_text"])
+    await reply_text(update, response_message["generated_text"])
 
 
 def main():
@@ -59,9 +64,7 @@ def main():
 
     application.add_handler(CommandHandler("start", handle_start))
 
-    application.add_handler(
-        MessageHandler(filters.PHOTO, handle_image)
-    )
+    application.add_handler(MessageHandler(filters.PHOTO, handle_image))
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
