@@ -41,10 +41,6 @@ async def reply_text(update: Update, text: str):
     await update.message.reply_text(translated_text)
 
 
-def image_to_text(*args, **kwargs):
-    return [{"generated_text": "dummy response"}]
-
-
 image_to_text = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
 
 
