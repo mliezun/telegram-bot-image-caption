@@ -35,6 +35,14 @@ Finally start the bot by executing:
 python bot.py
 ```
 
+## Development
+
+Install `pre-commit` with:
+
+```
+pre-commit install
+```
+
 # LICENSE
 
 [MIT](/LICENSE)
