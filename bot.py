@@ -34,9 +34,9 @@ assert TELEGRAM_API_TOKEN, "Expected TELEGRAM_API_TOKEN to be set"
 async def reply_text(update: Update, text: str):
     user = update.message.from_user
     target_language = user.language_code
-    translated_text = GoogleTranslator(
-        source="en", target=target_language
-    ).translate(text)
+    translated_text = GoogleTranslator(source="en", target=target_language).translate(
+        text
+    )
     logger.info(f"Reply {user.username=} {text=} {target_language=} {translated_text=}")
     await update.message.reply_text(translated_text)
 
@@ -50,13 +50,13 @@ image_to_text = pipeline("image-to-text", model="Salesforce/blip-image-captionin
 
 async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Starting new chat")
-    
+
     await reply_text(update, "Send me a photo and I'll respond with a caption!")
 
 
 async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Received new image")
-    
+
     photo = await update.message.photo[-1].get_file()
 
     raw_image = Image.open(requests.get(photo.file_path, stream=True).raw)
