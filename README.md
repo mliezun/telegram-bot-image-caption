@@ -2,6 +2,10 @@
 
 Simple Telegram bot that returns the caption of an image.
 
+This bot makes use of [Salesforce/blip-image-captioning-base](https://huggingface.co/Salesforce/blip-image-captioning-base) for generation captions of the images.
+
+Also, it detects the language of the user and translates with [deep-translator](https://pypi.org/project/deep-translator/).
+
 
 ## How to start
 
