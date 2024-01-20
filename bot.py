@@ -1,23 +1,70 @@
+import logging
+import threading
+import time
+
 import os
-from telegram.ext import Updater, CommandHandler
+from telegram import Update
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
 from dotenv import load_dotenv
+from transformers import pipeline
+from PIL import Image
+import requests
+
+# Setup logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
+logger = logging.getLogger(__name__)
+
 
 load_dotenv()
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-assert TELEGRAM_BOT_TOKEN, "Expected TELEGRAM_BOT_TOKEN to be set"
+TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
+assert TELEGRAM_API_TOKEN, "Expected TELEGRAM_API_TOKEN to be set"
 
-def start(update, context):
-    update.message.reply_text("Send me a photo with a message and I'll respond with a caption!")
+
+def image_to_text(*args, **kwargs):
+    return [{"generated_text": "dummy response"}]
+
+
+image_to_text = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
+
+
+async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Send me a photo and I'll respond with a caption!"
+    )
+
+
+async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    photo = await update.message.photo[-1].get_file()
+
+    raw_image = Image.open(requests.get(photo.file_path, stream=True).raw)
+
+    response_message = image_to_text(raw_image)[0]
+    await update.message.reply_text(response_message["generated_text"])
+
 
 def main():
-    updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("start", start))
+    application = Application.builder().token(TELEGRAM_API_TOKEN).build()
 
-    updater.start_polling()
+    application.add_handler(CommandHandler("start", handle_start))
 
-    updater.idle()
+    application.add_handler(
+        MessageHandler(filters.PHOTO, handle_image)
+    )
 
-if __name__ == '__main__':
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+
+if __name__ == "__main__":
     main()
