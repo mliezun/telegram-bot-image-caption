@@ -1,3 +1,4 @@
-git+https://github.com/huggingface/transformers.git
-python-telegram-bot
-python-dotenv
+git+https://github.com/huggingface/transformers.git@3f69f415adcbdaedec154ba8eac220ef3276975d
+python-telegram-bot==20.7
+python-dotenv==1.0.0
+deep-translator==1.11.4
